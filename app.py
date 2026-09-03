@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, session, make_respon
 import os
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get("SECRET_KEY", "kavach-ctf-secret-2026-key")
 
 # ============================================================
 # KAVACH CTF
@@ -169,9 +169,10 @@ def reset():
 
 # ============================================================
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
     print("\n" + "=" * 50)
     print("  KAVACH CTF SERVER STARTED")
     print("=" * 50)
-    print("  Open: http://127.0.0.1:5000")
+    print(f"  Port: {port}")
     print("=" * 50 + "\n")
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(host="0.0.0.0", port=port)
