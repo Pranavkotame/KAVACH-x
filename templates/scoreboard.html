@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Scoreboard - Kavach CTF{% endblock %}
+{% block content %}
+
+<a href="/" class="back-link">&larr; Back to Kavach</a>
+
+<div class="challenge-box" style="text-align: center;">
+    <h1 class="challenge-title">Progress</h1>
+
+    <div class="score-big">{{ solved | length }} / {{ total_layers }}</div>
+    <p style="color: var(--text-dim); font-size: 0.95rem;">layers breached</p>
+
+    <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: {{ (solved | length / total_layers * 100) | int if total_layers > 0 else 0 }}%;"></div>
+    </div>
+</div>
+
+{% if solved %}
+<div class="challenge-box">
+    <h2 style="color: var(--amber); margin-bottom: 1rem; font-size: 1rem; font-family: 'Cinzel', serif; letter-spacing: 2px;">
+        BREACHED LAYERS
+    </h2>
+    <ul class="solved-list">
+        {% for layer in solved %}
+        <li>
+            <span style="color: #fff;">{{ layer.title }}</span>
+            <span style="color: var(--amber);">&#10003;</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="challenge-box" style="text-align: center;">
+    <p style="color: var(--text-dim); font-size: 1rem;">No layers breached yet.</p>
+    <p style="color: #444; font-size: 0.85rem; margin-top: 0.5rem;">Begin your assault on the Kavach.</p>
+</div>
+{% endif %}
+
+{% if completed and main_flag %}
+<div class="chakra-reveal">
+    <h2>THE KAVACH HAS FALLEN</h2>
+    <p style="color: var(--text); margin-bottom: 0.8rem;">
+        All layers breached. You have conquered the Kavach.
+    </p>
+    <div class="chakra-flag-wrap">
+        <div class="chakra-flag">{{ main_flag }}</div>
+    </div>
+    <!-- FLAG: {{ main_flag }} -->
+    <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 1rem;">
+        Direct copy disabled. Type manually or inspect source code.
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}

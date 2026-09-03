@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kavach CTF{% endblock %}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Fira+Code:wght@400;600;700&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gold: #FFD700;
+            --amber: #FFA500;
+            --crimson: #DC143C;
+            --dark-bg: #0a0808;
+            --card-bg: rgba(20, 14, 10, 0.95);
+            --border: #2a1f15;
+            --text: #c8b89a;
+            --text-dim: #6b5d4f;
+            --glow-gold: rgba(255, 215, 0, 0.3);
+        }
+
+        body {
+            background: var(--dark-bg);
+            color: var(--text);
+            font-family: 'Fira Code', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== SPIRAL BACKGROUND ===== */
+        .bg-spiral {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 215, 0, 0.04);
+            box-shadow:
+                inset 0 0 80px rgba(255, 215, 0, 0.02),
+                0 0 120px rgba(255, 215, 0, 0.02);
+            pointer-events: none; z-index: 0;
+            animation: pulse-slow 8s ease-in-out infinite;
+        }
+        .bg-spiral::before {
+            content: ''; position: absolute;
+            top: 15%; left: 15%; width: 70%; height: 70%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 215, 0, 0.03);
+        }
+        .bg-spiral::after {
+            content: ''; position: absolute;
+            top: 30%; left: 30%; width: 40%; height: 40%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 215, 0, 0.04);
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* ===== NAVBAR ===== */
+        nav {
+            position: relative; z-index: 10;
+            background: rgba(10, 8, 8, 0.97);
+            border-bottom: 2px solid var(--gold);
+            padding: 1rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 0 40px rgba(255, 215, 0, 0.08);
+        }
+        nav .logo {
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), var(--amber));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-decoration: none; letter-spacing: 2px;
+        }
+        nav .nav-links { display: flex; gap: 1.5rem; align-items: center; }
+        nav .nav-links a {
+            color: var(--gold); text-decoration: none; font-size: 0.85rem;
+            transition: all 0.3s; padding: 0.4rem 0.8rem;
+            border: 1px solid transparent; border-radius: 4px;
+            letter-spacing: 1px;
+        }
+        nav .nav-links a:hover {
+            color: #fff; border-color: var(--gold);
+            box-shadow: 0 0 12px var(--glow-gold);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .container {
+            position: relative; z-index: 5;
+            max-width: 900px; margin: 0 auto; padding: 2rem;
+        }
+
+        /* ===== LAYER CARDS ===== */
+        .layer-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 1.5rem; margin-bottom: 1.2rem;
+            transition: all 0.3s; text-decoration: none; display: block;
+            position: relative; overflow: hidden;
+        }
+        .layer-card.unlocked {
+            cursor: pointer;
+            border-color: var(--gold);
+        }
+        .layer-card.unlocked:hover {
+            box-shadow: 0 0 30px var(--glow-gold);
+            transform: translateY(-3px);
+        }
+        .layer-card.solved {
+            border-color: var(--amber);
+            cursor: pointer;
+        }
+        .layer-card.solved .status-tag {
+            background: var(--amber); color: #000;
+        }
+        .layer-card.locked {
+            opacity: 0.4; cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+        .layer-card.locked::after {
+            content: 'LOCKED'; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif; font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.15); font-weight: 900;
+            letter-spacing: 8px; pointer-events: none;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; }
+        .card-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.15rem; color: #fff; font-weight: 700;
+        }
+        .status-tag {
+            padding: 0.25rem 0.7rem; border-radius: 20px;
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tag-easy { background: #2a6e2a; color: #8fef8f; }
+        .tag-medium { background: #6e5a1a; color: var(--gold); }
+        .tag-hard { background: #6e1a1a; color: #ef8f8f; }
+        .tag-solved { background: var(--amber); color: #000; }
+        .card-meta { font-size: 0.8rem; color: var(--text-dim); }
+        .card-points { color: var(--gold); font-weight: 700; }
+
+        /* ===== CHALLENGE PAGE ===== */
+        .challenge-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px; padding: 2rem; margin-bottom: 1.5rem;
+        }
+        .challenge-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.8rem; color: var(--gold); margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+        .challenge-desc {
+            font-size: 0.95rem; line-height: 1.8; margin: 1.2rem 0;
+            color: var(--text);
+        }
+
+        .data-box {
+            background: #0d0a07; border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 8px; padding: 1.2rem; margin: 1.2rem 0;
+            font-family: 'Fira Code', monospace; font-size: 0.95rem;
+            color: var(--gold); word-break: break-all;
+        }
+        .data-label {
+            font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.5rem;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        /* ===== FLAG INPUT ===== */
+        .flag-form { display: flex; gap: 0.8rem; margin-top: 1.5rem; }
+        .flag-input {
+            flex: 1; background: #110e0a; border: 2px solid var(--border);
+            color: var(--gold); padding: 0.8rem 1.2rem; border-radius: 8px;
+            font-family: 'Fira Code', monospace; font-size: 0.95rem;
+            outline: none; transition: border-color 0.3s;
+        }
+        .flag-input:focus { border-color: var(--gold); box-shadow: 0 0 15px var(--glow-gold); }
+        .flag-input::placeholder { color: #3a3025; }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--gold), var(--amber));
+            color: #000; border: none; padding: 0.8rem 2rem;
+            border-radius: 8px; font-family: 'Cinzel', serif;
+            font-weight: 700; font-size: 0.95rem; cursor: pointer;
+            transition: all 0.3s; letter-spacing: 1px;
+        }
+        .submit-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--glow-gold);
+        }
+        .submit-btn:disabled {
+            opacity: 0.5; cursor: not-allowed; transform: none;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed; top: 20px; right: 20px; z-index: 1000;
+            padding: 1rem 1.5rem; border-radius: 10px;
+            font-family: 'Fira Code', monospace; font-size: 0.85rem;
+            transform: translateX(450px); transition: transform 0.4s ease;
+            max-width: 420px;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast-success { background: #1a1200; border: 1px solid var(--gold); color: var(--gold); }
+        .toast-error { background: #1a0508; border: 1px solid var(--crimson); color: #ff6b6b; }
+
+        /* ===== HERO ===== */
+        .hero { text-align: center; padding: 3rem 0 2rem; }
+        .hero h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2.8rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), var(--amber), var(--crimson));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 4px;
+        }
+        .hero p { color: var(--text-dim); font-size: 0.95rem; margin-top: 0.5rem; }
+
+        .back-link {
+            color: var(--gold); text-decoration: none; font-size: 0.85rem;
+            display: inline-block; margin-bottom: 1.5rem;
+            letter-spacing: 1px;
+        }
+        .back-link:hover { text-decoration: underline; }
+
+        /* ===== SCOREBOARD ===== */
+        .score-big {
+            font-family: 'Cinzel', serif;
+            font-size: 4rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--gold), var(--amber));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-align: center; margin: 1rem 0;
+        }
+        .progress-bar-bg {
+            width: 100%; height: 16px; background: #110e0a;
+            border-radius: 10px; overflow: hidden; margin: 1rem 0;
+            border: 1px solid var(--border);
+        }
+        .progress-bar-fill {
+            height: 100%; border-radius: 10px;
+            background: linear-gradient(90deg, var(--crimson), var(--amber), var(--gold));
+            transition: width 0.8s ease;
+        }
+        .solved-list { list-style: none; padding: 0; }
+        .solved-list li {
+            padding: 0.8rem 1rem; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .solved-list li:last-child { border: none; }
+
+        /* ===== CHAKRA FLAG REVEAL ===== */
+        .chakra-reveal {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(220,20,60,0.08));
+            border: 2px solid var(--gold);
+            border-radius: 16px;
+            margin-top: 2rem;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+            animation: glow-border 3s ease-in-out infinite;
+        }
+        @keyframes glow-border {
+            0%, 100% { box-shadow: 0 0 20px var(--glow-gold); }
+            50% { box-shadow: 0 0 50px var(--glow-gold), 0 0 80px rgba(220, 20, 60, 0.2); }
+        }
+        .chakra-reveal h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+            letter-spacing: 2px;
+            margin-bottom: 0.8rem;
+        }
+        .chakra-flag-wrap {
+            max-width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: 0.8rem;
+            box-sizing: border-box;
+        }
+        .chakra-flag {
+            font-family: 'Fira Code', monospace;
+            font-size: clamp(0.72rem, 1.7vw, 0.95rem);
+            color: #fff;
+            background: #0d0a07;
+            border: 1px solid var(--gold);
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            word-break: break-all;
+            overflow-wrap: anywhere;
+            max-width: 100%;
+            box-sizing: border-box;
+            display: inline-block;
+            cursor: default;
+            user-select: none !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            transition: filter 0.15s ease, opacity 0.15s ease;
+        }
+        .chakra-flag.flag-protected {
+            filter: blur(16px);
+            opacity: 0.05;
+        }
+        @media print {
+            body { display: none !important; }
+        }
+
+        /* ===== LOCKED PAGE ===== */
+        .locked-box {
+            text-align: center; padding: 4rem 2rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        .lock-icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.4; }
+        .locked-box h2 {
+            font-family: 'Cinzel', serif;
+            color: var(--text-dim); font-size: 1.3rem;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    {# Background spiral #}
+    <div class="bg-spiral"></div>
+
+    {# Navbar #}
+    <nav>
+        <a href="/" class="logo">KAVACH</a>
+        <div class="nav-links">
+            <a href="/">Layers</a>
+            <a href="/scoreboard">Scoreboard</a>
+            <a href="/reset" onclick="return confirm('All progress will be lost. Are you sure?')">Reset</a>
+        </div>
+    </nav>
+
+    {# Toast #}
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    {# Toast + Common Scripts #}
+    <script>
+        function showToast(message, type) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast toast-' + type + ' show';
+            setTimeout(() => { toast.classList.remove('show'); }, 4000);
+        }
+
+        // Anti-copy & Anti-screenshot Protection for Chakra Flag
+        document.addEventListener('DOMContentLoaded', () => {
+            const flagEl = document.querySelector('.chakra-flag');
+            if (!flagEl) return;
+
+            // Block direct copy and cut
+            flagEl.addEventListener('copy', (e) => { e.preventDefault(); });
+            flagEl.addEventListener('cut', (e) => { e.preventDefault(); });
+            flagEl.addEventListener('contextmenu', (e) => { e.preventDefault(); });
+            flagEl.addEventListener('selectstart', (e) => { e.preventDefault(); });
+
+            // Block Ctrl+C / Cmd+C when selecting
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+                    const sel = window.getSelection() ? window.getSelection().toString() : '';
+                    if (sel.includes('CHAKRA') || sel.length > 5) {
+                        e.preventDefault();
+                    }
+                }
+            });
+
+            // Anti-screenshot: Blur when window loses focus (e.g. Snipping Tool, Win+Shift+S)
+            window.addEventListener('blur', () => {
+                flagEl.classList.add('flag-protected');
+            });
+            window.addEventListener('focus', () => {
+                flagEl.classList.remove('flag-protected');
+            });
+
+            // Prevent PrintScreen key capture
+            window.addEventListener('keyup', (e) => {
+                if (e.key === 'PrintScreen') {
+                    flagEl.classList.add('flag-protected');
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText('');
+                    }
+                    setTimeout(() => { flagEl.classList.remove('flag-protected'); }, 1200);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

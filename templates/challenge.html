@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ layer.title }} - Kavach CTF{% endblock %}
+{% block content %}
+
+<a href="/" class="back-link">&larr; Back to Kavach</a>
+
+<div class="challenge-box">
+    <div>
+        <span class="status-tag tag-{{ layer.difficulty | lower }}">{{ layer.difficulty }}</span>
+        <span class="card-meta" style="margin-left: 0.5rem;">{{ layer.category }}</span>
+    </div>
+
+    <h1 class="challenge-title" style="margin-top: 1rem;">{{ layer.title }}</h1>
+    <p class="challenge-desc">{{ layer.description }}</p>
+
+    {% if layer.id == "1" %}
+        <div style="background: #0d0a07; border-radius: 8px; padding: 2.5rem; text-align: center; margin: 1.2rem 0; border: 1px solid var(--border);">
+            <p style="color: var(--text-dim); font-size: 1.1rem;">
+                The wall appears blank... or does it?
+            </p>
+        </div>
+        <!-- QUJISU1BTllV -->
+    {% endif %}
+
+    {% if layer.id == "2" %}
+        <div style="background: #0d0a07; border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 12px; padding: 2rem; margin: 1.2rem 0; text-align: center;">
+            <div class="data-label" style="margin-bottom: 1rem;">Intercepted Transmission</div>
+            <audio controls style="width: 100%; max-width: 500px; filter: sepia(0.3);">
+                <source src="{{ url_for('static', filename=layer.audio_file) }}" type="audio/wav">
+                Your browser does not support audio playback.
+            </audio>
+        </div>
+    {% endif %}
+
+    {% if layer.id == "3" %}
+        <div class="data-label">Encrypted Text</div>
+        <div class="data-box" style="border-color: rgba(220, 20, 60, 0.3);">
+            {{ layer.encrypted_text }}
+        </div>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.5rem;">
+            The code is the final word of the decrypted message.
+        </p>
+    {% endif %}
+    {% if is_solved %}
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,165,0,0.08); border: 1px solid var(--amber); border-radius: 8px; text-align: center;">
+            <p style="color: var(--amber); font-size: 1rem; font-weight: 700; font-family: 'Cinzel', serif; letter-spacing: 2px;">
+                LAYER BREACHED
+            </p>
+        </div>
+    {% else %}
+        <div class="flag-form">
+            <input type="text" id="code-input" class="flag-input" placeholder="Enter the code..."
+                   autocomplete="off"
+                   onkeydown="if(event.key==='Enter') submitCode('{{ layer.id }}')">
+            <button class="submit-btn" onclick="submitCode('{{ layer.id }}')">SUBMIT</button>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function submitCode(layerId) {
+    const input = document.getElementById('code-input');
+    const code = input.value.trim();
+    if (!code) { showToast('Enter a code first.', 'error'); return; }
+
+    fetch('/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ layer_id: layerId, code: code })
+    })
+    .then(r => r.json())
+    .then(data => {
+        showToast(data.message, data.success ? 'success' : 'error');
+        if (data.success) {
+            input.style.borderColor = 'var(--gold)';
+            input.disabled = true;
+            document.querySelector('.submit-btn').disabled = true;
+            document.querySelector('.submit-btn').textContent = 'BREACHED';
+            setTimeout(() => { window.location.href = '/'; }, 2000);
+        }
+    })
+    .catch(() => showToast('Server error.', 'error'));
+}
+</script>
+
+{% endblock %}

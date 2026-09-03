@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Locked - Kavach CTF{% endblock %}
+{% block content %}
+
+<a href="/" class="back-link">&larr; Back to Kavach</a>
+
+<div class="locked-box">
+    <div class="lock-icon">&#x1F512;</div>
+    <h2>THIS LAYER IS SEALED</h2>
+    <p style="color: var(--text-dim); margin-top: 1rem; font-size: 0.9rem;">
+        Breach Layer {{ unlocked }} first to unlock this one.
+    </p>
+    <a href="/" style="display: inline-block; margin-top: 1.5rem; color: var(--gold); text-decoration: none; font-size: 0.85rem;">
+        &larr; Return to the Kavach
+    </a>
+</div>
+
+{% endblock %}

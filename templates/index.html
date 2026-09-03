@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Kavach CTF{% endblock %}
+{% block content %}
+<div class="hero">
+    <h1>KAVACH</h1>
+    <p>Breach the layers. Penetrate the armor. Claim the flag.</p>
+    <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 0.3rem;">
+        {{ solved | length }} / {{ layers | length }} layers breached
+    </p>
+</div>
+
+{# Layer Cards #}
+{% for id, layer in layers.items() %}
+    {% if id in solved %}
+        <a href="/challenge/{{ id }}" class="layer-card solved">
+            <div class="card-header">
+                <span class="card-title">{{ layer.title }}</span>
+                <span class="status-tag tag-solved">BREACHED</span>
+            </div>
+            <div class="card-meta">{{ layer.category }}</div>
+        </a>
+    {% elif layer.layer <= unlocked %}
+        <a href="/challenge/{{ id }}" class="layer-card unlocked">
+            <div class="card-header">
+                <span class="card-title">{{ layer.title }}</span>
+                <span class="status-tag tag-{{ layer.difficulty | lower }}">{{ layer.difficulty }}</span>
+            </div>
+            <div class="card-meta">{{ layer.category }}</div>
+        </a>
+    {% else %}
+        <div class="layer-card locked">
+            <div class="card-header">
+                <span class="card-title">{{ layer.title }}</span>
+                <span class="status-tag" style="background:#333;color:#666;">LOCKED</span>
+            </div>
+            <div class="card-meta">{{ layer.category }}</div>
+        </div>
+    {% endif %}
+{% endfor %}
+
+{# CHAKRA FLAG REVEAL #}
+{% if completed and main_flag %}
+<div class="chakra-reveal">
+    <h2>THE KAVACH HAS FALLEN</h2>
+    <p style="color: var(--text); margin-bottom: 0.8rem;">
+        All three layers have been breached. The core is yours.
+    </p>
+    <div class="chakra-flag-wrap">
+        <div class="chakra-flag">{{ main_flag }}</div>
+    </div>
+    <!-- FLAG: {{ main_flag }} -->
+    <p style="color: var(--text-dim); font-size: 0.8rem; margin-top: 1rem;">
+        Direct copy disabled. Type manually or inspect source code.
+    </p>
+</div>
+{% endif %}
+
+{% endblock %}
